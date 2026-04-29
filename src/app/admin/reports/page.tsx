@@ -154,9 +154,10 @@ export default async function AdminReportsPage({
               .map((person) => {
                 const p = person as Record<string, unknown>;
                 return (
-                <option key={p.id} value={p.id}>
-                  {p.full_name ?? p.id} {p.is_active === false ? "(disabled)" : ""}
-                </option>
+                  <option key={String(p.id)} value={String(p.id)}>
+                    {String(p.full_name ?? p.id)}{" "}
+                    {p.is_active === false ? "(disabled)" : ""}
+                  </option>
                 );
               })}
           </select>
