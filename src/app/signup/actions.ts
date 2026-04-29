@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/db/server";
+import { getBaseUrl } from "@/lib/url";
 
 const SignupSchema = z.object({
   fullName: z.string().min(1),
@@ -22,9 +23,13 @@ export async function signupSalespersonAction(formData: FormData) {
   if (!parsed.success) redirect("/signup?error=1");
 
   const supabase = await createSupabaseServerClient();
+  const baseUrl = await getBaseUrl();
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
+    options: {
+      emailRedirectTo: `${baseUrl}/login`,
+    },
   });
 
   if (error || !data.user) redirect("/signup?error=1");
@@ -38,4 +43,3 @@ export async function signupSalespersonAction(formData: FormData) {
 
   redirect("/sales");
 }
-
