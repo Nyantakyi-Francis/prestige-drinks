@@ -84,6 +84,7 @@ create trigger trg_products_sync_stock
 before insert or update on public.products
 for each row execute function public.products_sync_stock();
 
+
 -- Backfill packs/pieces for existing rows.
 update public.products
 set
