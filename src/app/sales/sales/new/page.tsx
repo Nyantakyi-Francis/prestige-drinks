@@ -41,7 +41,7 @@ export default async function RecordSalePage() {
               Select a product…
             </option>
             {(products ?? []).map((p) => (
-              <option key={p.id} value={p.id}>
+              <option key={String(p.id)} value={String(p.id)}>
                 {(() => {
                   const s = splitStockUnits(
                     Number(p.stock_units ?? 0),
