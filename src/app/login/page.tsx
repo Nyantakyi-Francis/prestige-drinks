@@ -1,4 +1,5 @@
 import { loginAction } from "@/app/login/actions";
+import { PasswordField } from "@/components/PasswordField";
 
 export default function LoginPage({
   searchParams,
@@ -55,13 +56,12 @@ async function LoginPageInner({
             >
               Password
             </label>
-            <input
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10"
+            <PasswordField
               id="password"
               name="password"
-              type="password"
               autoComplete="current-password"
               required
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 pr-14 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10"
             />
           </div>
           <button

@@ -89,16 +89,16 @@ export default async function GoodsInPage() {
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+      <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-3 py-2">Product</th>
               <th className="px-3 py-2">Stock</th>
               <th className="px-3 py-2">Status</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {(products ?? []).map((p) => {
               const low = p.stock_units <= p.low_stock_threshold;
               const status = p.stock_units === 0 ? "Zero" : low ? "Low" : "OK";

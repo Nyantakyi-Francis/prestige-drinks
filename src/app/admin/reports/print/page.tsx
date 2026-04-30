@@ -75,9 +75,9 @@ export default async function PrintReportPage({
         <Card label="Units Sold" value={`${totals.units}`} />
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+      <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Product</th>
@@ -87,7 +87,7 @@ export default async function PrintReportPage({
               <th className="px-3 py-2">Profit</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {(sales ?? []).map((sale) => {
               const s = sale as Record<string, unknown>;
               const soldAt = new Date(String(s.sold_at));

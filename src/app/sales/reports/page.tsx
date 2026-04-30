@@ -51,9 +51,9 @@ export default async function WeeklyReturnsPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+      <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-3 py-2">Product</th>
               <th className="px-3 py-2">Sold (units)</th>
@@ -61,7 +61,7 @@ export default async function WeeklyReturnsPage() {
               <th className="px-3 py-2">Stock Left</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {(products ?? []).map((p) => {
               const s = byProduct.get(p.id) ?? { name: p.name, units: 0, revenue: 0 };
               const stock = splitStockUnits(

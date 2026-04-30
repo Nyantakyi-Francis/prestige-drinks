@@ -97,15 +97,15 @@ export default async function AdminUsersPage() {
         </div>
       </form>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
+      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
         <div className="flex items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3">
           <div className="text-sm font-semibold">All Users</div>
           <div className="text-xs text-zinc-500">
             Disable/enable requires running `supabase/upgrade.sql`.
           </div>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Name</th>
@@ -115,7 +115,7 @@ export default async function AdminUsersPage() {
               <th className="px-4 py-2">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {rows.map((r) => (
               <tr key={r.id} className={!r.isActive ? "bg-red-50" : undefined}>
                 <td className="px-4 py-2 font-medium">{r.email}</td>

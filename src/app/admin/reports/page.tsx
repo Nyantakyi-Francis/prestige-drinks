@@ -221,13 +221,13 @@ export default async function AdminReportsPage({
         <Card label="Units Sold" value={`${totals.units}`} />
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
+      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
         <div className="border-b border-zinc-200/70 px-4 py-3">
           <div className="text-sm font-semibold">Recent Sales</div>
           <div className="mt-1 text-xs text-zinc-500">Showing up to 200 records.</div>
         </div>
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-4 py-2">Date</th>
               <th className="px-4 py-2">Product</th>
@@ -237,7 +237,7 @@ export default async function AdminReportsPage({
               <th className="px-4 py-2">Profit</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {(sales ?? []).map((sale) => {
               const s = sale as Record<string, unknown>;
               const soldAt = new Date(String(s.sold_at));

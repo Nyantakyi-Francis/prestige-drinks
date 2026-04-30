@@ -48,9 +48,9 @@ export default async function TodaySalesPage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-        <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600">
+      <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
+        <table className="min-w-max w-full text-sm">
+          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
             <tr>
               <th className="px-3 py-2">Time</th>
               <th className="px-3 py-2">Product</th>
@@ -59,7 +59,7 @@ export default async function TodaySalesPage() {
               <th className="px-3 py-2">Revenue</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="whitespace-nowrap">
             {(sales ?? []).map((s) => (
               <tr key={s.id}>
                 <td className="px-3 py-2">
