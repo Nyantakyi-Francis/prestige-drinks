@@ -1,9 +1,11 @@
-import { connection } from "next/server";
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
+import { ArrowLeft, Save } from "lucide-react";
 
 import { updateProductAction } from "@/app/admin/products/actions";
 import { StockFields } from "@/app/admin/products/StockFields";
+import { PageHeader, PrimaryButton, SectionCard, StatusBadge, inputClassName } from "@/components/ui";
 import { getSupabaseAdmin, requireRole } from "@/lib/db/server";
 
 export default async function AdminEditProductPage({
@@ -28,111 +30,69 @@ export default async function AdminEditProductPage({
   if (!product) redirect("/admin/products");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold">Edit Product</h1>
-        <p className="text-sm text-zinc-600">
-          Stock is saved as packs + pieces (auto-syncs units in the database).
-        </p>
-      </div>
-
-      <form
-        action={updateProductAction}
-        className="grid gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 md:grid-cols-2"
-      >
-        <input type="hidden" name="id" value={product.id} />
-
-        <Field label="Product Name" name="name" required defaultValue={product.name} />
-        <Field
-          label="Pack Size (units)"
-          name="packSize"
-          type="number"
-          required
-          defaultValue={product.pack_size}
-        />
-        <Field
-          label="Cost Price / Pack (GHS)"
-          name="costPricePerPack"
-          type="number"
-          step="0.01"
-          required
-          defaultValue={product.cost_price_per_pack}
-        />
-        <Field
-          label="Wholesale Price / Pack (GHS)"
-          name="wholesalePricePerPack"
-          type="number"
-          step="0.01"
-          required
-          defaultValue={product.wholesale_price_per_pack}
-        />
-        <Field
-          label="Half Pack Price (optional)"
-          name="halfPackPrice"
-          type="number"
-          step="0.01"
-          defaultValue={product.half_pack_price ?? ""}
-        />
-        <Field
-          label="Retail Price / Unit (GHS)"
-          name="retailPricePerUnit"
-          type="number"
-          step="0.01"
-          required
-          defaultValue={product.retail_price_per_unit}
-        />
-        <Field
-          label="Store Price / Unit (GHS)"
-          name="storePricePerUnit"
-          type="number"
-          step="0.01"
-          required
-          defaultValue={product.store_price_per_unit}
-        />
-
-        <StockFields
-          initialPacks={Number(product.stock_packs ?? 0)}
-          initialPieces={Number(product.stock_pieces ?? 0)}
-        />
-
-        <Field
-          label="Low Stock Threshold (units)"
-          name="lowStockThreshold"
-          type="number"
-          defaultValue={product.low_stock_threshold}
-        />
-
-        <div className="md:col-span-2 flex items-center gap-2">
-          <input
-            id="isActive"
-            name="isActive"
-            type="checkbox"
-            defaultChecked={Boolean(product.is_active)}
-            className="h-4 w-4 rounded border-zinc-300 text-zinc-900"
-          />
-          <label htmlFor="isActive" className="text-sm text-zinc-700">
-            Active
-          </label>
-        </div>
-
-        <div className="md:col-span-2 flex gap-2">
-          <button
-            type="submit"
-            className="rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-          >
-            Save Changes
-          </button>
+    <div className="space-y-5">
+      <PageHeader
+        title="Edit product"
+        description="Update prices, stock, and whether this product can be used in sales screens."
+        actions={
           <Link
             href="/admin/products"
-            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
           >
+            <ArrowLeft className="h-4 w-4" aria-hidden />
             Back
           </Link>
-          <div className="ml-auto text-xs text-zinc-500">
-            Current units: {product.stock_units}
+        }
+      />
+
+      <SectionCard>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-zinc-950">{product.name}</h2>
+            <p className="text-sm text-zinc-600">Current stock: {product.stock_units} units</p>
           </div>
+          <StatusBadge tone={product.is_active ? "good" : "neutral"}>
+            {product.is_active ? "Active" : "Inactive"}
+          </StatusBadge>
         </div>
-      </form>
+
+        <form action={updateProductAction} className="mt-4 grid gap-3 md:grid-cols-2">
+          <input type="hidden" name="id" value={product.id} />
+
+          <Field label="Product name" name="name" required defaultValue={product.name} />
+          <Field label="Pack size" name="packSize" type="number" required defaultValue={product.pack_size} />
+          <Field label="Cost per pack (GHS)" name="costPricePerPack" type="number" step="0.01" required defaultValue={product.cost_price_per_pack} />
+          <Field label="Wholesale per pack (GHS)" name="wholesalePricePerPack" type="number" step="0.01" required defaultValue={product.wholesale_price_per_pack} />
+          <Field label="Half-pack price" name="halfPackPrice" type="number" step="0.01" defaultValue={product.half_pack_price ?? ""} />
+          <Field label="Retail per unit (GHS)" name="retailPricePerUnit" type="number" step="0.01" required defaultValue={product.retail_price_per_unit} />
+          <Field label="Store per unit (GHS)" name="storePricePerUnit" type="number" step="0.01" required defaultValue={product.store_price_per_unit} />
+
+          <StockFields
+            initialPacks={Number(product.stock_packs ?? 0)}
+            initialPieces={Number(product.stock_pieces ?? 0)}
+          />
+
+          <Field label="Low-stock mark" name="lowStockThreshold" type="number" defaultValue={product.low_stock_threshold} />
+
+          <label className="flex min-h-11 items-center gap-3 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 md:col-span-2">
+            <input
+              id="isActive"
+              name="isActive"
+              type="checkbox"
+              defaultChecked={Boolean(product.is_active)}
+              className="h-5 w-5 rounded border-zinc-300 text-zinc-900"
+            />
+            <span className="text-sm font-semibold text-zinc-900">Show this product in sales screens</span>
+          </label>
+
+          <div className="md:col-span-2">
+            <PrimaryButton type="submit">
+              <Save className="h-4 w-4" aria-hidden />
+              Save changes
+            </PrimaryButton>
+          </div>
+        </form>
+      </SectionCard>
     </div>
   );
 }
@@ -153,12 +113,10 @@ function Field({
   defaultValue?: string | number;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-medium text-zinc-700" htmlFor={name}>
-        {label}
-      </label>
+    <label className="block">
+      <span className="text-sm font-semibold text-zinc-900">{label}</span>
       <input
-        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+        className={inputClassName("mt-2")}
         id={name}
         name={name}
         type={type}
@@ -166,6 +124,6 @@ function Field({
         required={required}
         defaultValue={defaultValue}
       />
-    </div>
+    </label>
   );
 }

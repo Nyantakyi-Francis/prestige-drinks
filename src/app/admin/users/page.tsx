@@ -1,5 +1,14 @@
-import { requireRole } from "@/lib/db/server";
-import { getSupabaseAdmin } from "@/lib/db/server";
+import { KeyRound, UserPlus } from "lucide-react";
+
+import {
+  EmptyState,
+  PageHeader,
+  PrimaryButton,
+  SectionCard,
+  StatusBadge,
+  inputClassName,
+} from "@/components/ui";
+import { getSupabaseAdmin, requireRole } from "@/lib/db/server";
 import {
   createUserAction,
   resetPasswordAction,
@@ -25,7 +34,7 @@ export default async function AdminUsersPage() {
   if (usersErr) throw new Error(usersErr.message);
 
   const authUsers = usersResp?.users ?? [];
-  const ids = authUsers.map((u) => u.id);
+  const ids = authUsers.map((user) => user.id);
 
   const { data: profiles } = ids.length
     ? await db
@@ -35,128 +44,190 @@ export default async function AdminUsersPage() {
     : { data: [] as ProfileRow[] };
 
   const profileById = new Map<string, ProfileRow>();
-  for (const p of (profiles ?? []) as ProfileRow[]) profileById.set(p.id, p);
+  for (const profile of (profiles ?? []) as ProfileRow[]) profileById.set(profile.id, profile);
 
   const rows = authUsers
-    .map((u) => {
-      const p = profileById.get(u.id);
+    .map((user) => {
+      const profile = profileById.get(user.id);
       return {
-        id: u.id,
-        email: u.email ?? "",
-        createdAt: u.created_at,
-        lastSignInAt: (u as unknown as { last_sign_in_at?: string | null }).last_sign_in_at,
-        fullName: p?.full_name ?? null,
-        role: p?.role ?? "salesperson",
-        isActive: p?.is_active ?? true,
-        lastLoginAt: p?.last_login_at ?? null,
+        id: user.id,
+        email: user.email ?? "",
+        fullName: profile?.full_name ?? null,
+        role: profile?.role ?? "salesperson",
+        isActive: profile?.is_active ?? true,
+        lastLoginAt: profile?.last_login_at ?? null,
       };
     })
     .sort((a, b) => a.email.localeCompare(b.email));
 
+  const activeCount = rows.filter((row) => row.isActive).length;
+  const adminCount = rows.filter((row) => row.role === "admin").length;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight">Users</h1>
-        <p className="mt-1 text-sm text-zinc-600">
-          Create salespersons, reset passwords, and enable/disable accounts.
-        </p>
+    <div className="space-y-5">
+      <PageHeader
+        title="Users"
+        description="Create staff accounts and manage access without hunting through tiny controls."
+      />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Summary label="Users" value={`${rows.length}`} />
+        <Summary label="Active" value={`${activeCount}`} />
+        <Summary label="Admins" value={`${adminCount}`} />
       </div>
 
-      <form
-        action={createUserAction}
-        className="grid gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200/70 md:grid-cols-2"
-      >
-        <div className="md:col-span-2 text-sm font-semibold">Create User</div>
-        <Field label="Full name" name="fullName" required />
-        <Field label="Email" name="email" type="email" required />
-        <Field label="Password" name="password" type="password" required />
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="role">
-            Role
-          </label>
-          <select
-            id="role"
-            name="role"
-            defaultValue="salesperson"
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            <option value="salesperson">Salesperson</option>
-            <option value="admin">Admin</option>
-          </select>
-          <div className="text-xs text-zinc-500">
-            Tip: create as salesperson first, then promote if needed.
+      <SectionCard>
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-zinc-950 text-white">
+            <UserPlus className="h-5 w-5" aria-hidden />
+          </span>
+          <div>
+            <h2 className="text-base font-semibold text-zinc-950">Create user</h2>
+            <p className="text-sm text-zinc-600">New staff can sign in immediately after this account is created.</p>
           </div>
         </div>
-        <div className="md:col-span-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
-          >
-            Create
-          </button>
+
+        <form action={createUserAction} className="mt-4 grid gap-3 md:grid-cols-2">
+          <Field label="Full name" name="fullName" required />
+          <Field label="Email" name="email" type="email" required />
+          <Field label="Password" name="password" type="password" required />
+          <label className="block">
+            <span className="text-sm font-semibold text-zinc-900">Role</span>
+            <select id="role" name="role" defaultValue="salesperson" className={inputClassName("mt-2")}>
+              <option value="salesperson">Salesperson</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <div className="md:col-span-2">
+            <PrimaryButton type="submit">
+              <UserPlus className="h-4 w-4" aria-hidden />
+              Create user
+            </PrimaryButton>
+          </div>
+        </form>
+      </SectionCard>
+
+      <SectionCard>
+        <h2 className="text-base font-semibold text-zinc-950">All users</h2>
+        {rows.length ? (
+          <>
+            <div className="mt-3 grid gap-3 lg:hidden">
+              {rows.map((row) => (
+                <UserCard key={row.id} row={row} />
+              ))}
+            </div>
+
+            <div className="mt-3 hidden overflow-x-auto lg:block">
+              <table className="min-w-max w-full text-sm">
+                <thead className="bg-zinc-50 text-left text-zinc-600">
+                  <tr>
+                    <th className="px-4 py-3">User</th>
+                    <th className="px-4 py-3">Role</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Last login</th>
+                    <th className="px-4 py-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id} className="border-t border-zinc-100">
+                      <td className="px-4 py-3">
+                        <div className="font-semibold">{row.fullName ?? row.email}</div>
+                        <div className="text-zinc-600">{row.email}</div>
+                      </td>
+                      <td className="px-4 py-3">{row.role}</td>
+                      <td className="px-4 py-3">
+                        <StatusBadge tone={row.isActive ? "good" : "danger"}>
+                          {row.isActive ? "Active" : "Disabled"}
+                        </StatusBadge>
+                      </td>
+                      <td className="px-4 py-3">
+                        {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : "Never"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <UserActions row={row} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <EmptyState title="No users found" body="Create the first user above." />
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
+}
+
+type UserRow = {
+  id: string;
+  email: string;
+  fullName: string | null;
+  role: "admin" | "salesperson";
+  isActive: boolean;
+  lastLoginAt: string | null;
+};
+
+function UserCard({ row }: { row: UserRow }) {
+  return (
+    <div className="rounded-md border border-zinc-200 bg-white p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold text-zinc-950">{row.fullName ?? row.email}</h3>
+          <div className="mt-1 truncate text-sm text-zinc-600">{row.email}</div>
         </div>
+        <StatusBadge tone={row.isActive ? "good" : "danger"}>
+          {row.isActive ? "Active" : "Disabled"}
+        </StatusBadge>
+      </div>
+      <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+        <div className="rounded-md bg-zinc-50 p-2">
+          <div className="text-zinc-600">Role</div>
+          <div className="font-semibold text-zinc-950">{row.role}</div>
+        </div>
+        <div className="rounded-md bg-zinc-50 p-2">
+          <div className="text-zinc-600">Last login</div>
+          <div className="font-semibold text-zinc-950">
+            {row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleDateString() : "Never"}
+          </div>
+        </div>
+      </div>
+      <div className="mt-3">
+        <UserActions row={row} />
+      </div>
+    </div>
+  );
+}
+
+function UserActions({ row }: { row: UserRow }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <form action={toggleActiveAction}>
+        <input type="hidden" name="userId" value={row.id} />
+        <input type="hidden" name="isActive" value={String(!row.isActive)} />
+        <PrimaryButton type="submit" variant={row.isActive ? "danger" : "secondary"}>
+          {row.isActive ? "Disable" : "Enable"}
+        </PrimaryButton>
       </form>
 
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
-        <div className="flex items-center justify-between gap-3 border-b border-zinc-200/70 px-4 py-3">
-          <div className="text-sm font-semibold">All Users</div>
-          <div className="text-xs text-zinc-500">
-            Disable/enable requires running `supabase/upgrade.sql`.
-          </div>
-        </div>
-        <table className="min-w-max w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
-            <tr>
-              <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Role</th>
-              <th className="px-4 py-2">Active</th>
-              <th className="px-4 py-2">Last login</th>
-              <th className="px-4 py-2">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="whitespace-nowrap">
-            {rows.map((r) => (
-              <tr key={r.id} className={!r.isActive ? "bg-red-50" : undefined}>
-                <td className="px-4 py-2 font-medium">{r.email}</td>
-                <td className="px-4 py-2">{r.fullName ?? "—"}</td>
-                <td className="px-4 py-2">{r.role}</td>
-                <td className="px-4 py-2">{r.isActive ? "Yes" : "No"}</td>
-                <td className="px-4 py-2">
-                  {r.lastLoginAt ? new Date(r.lastLoginAt).toLocaleString() : "—"}
-                </td>
-                <td className="px-4 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <form action={toggleActiveAction} className="inline-flex">
-                      <input type="hidden" name="userId" value={r.id} />
-                      <input
-                        type="hidden"
-                        name="isActive"
-                        value={String(!r.isActive)}
-                      />
-                      <button
-                        type="submit"
-                        className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50"
-                      >
-                        {r.isActive ? "Disable" : "Enable"}
-                      </button>
-                    </form>
-
-                    <ResetPasswordInline userId={r.id} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {rows.length ? null : (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-zinc-600">
-                  No users found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <form action={resetPasswordAction} className="flex flex-wrap items-center gap-2">
+        <input type="hidden" name="userId" value={row.id} />
+        <input
+          name="password"
+          type="password"
+          placeholder="New password"
+          className={inputClassName("w-44")}
+          required
+        />
+        <PrimaryButton type="submit" variant="secondary">
+          <KeyRound className="h-4 w-4" aria-hidden />
+          Reset
+        </PrimaryButton>
+      </form>
     </div>
   );
 }
@@ -173,38 +244,24 @@ function Field({
   required?: boolean;
 }) {
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-medium text-zinc-700" htmlFor={name}>
-        {label}
-      </label>
+    <label className="block">
+      <span className="text-sm font-semibold text-zinc-900">{label}</span>
       <input
         id={name}
         name={name}
         type={type}
         required={required}
-        className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
+        className={inputClassName("mt-2")}
       />
-    </div>
+    </label>
   );
 }
 
-function ResetPasswordInline({ userId }: { userId: string }) {
+function Summary({ label, value }: { label: string; value: string }) {
   return (
-    <form action={resetPasswordAction} className="inline-flex items-center gap-2">
-      <input type="hidden" name="userId" value={userId} />
-      <input
-        name="password"
-        type="password"
-        placeholder="New password"
-        className="w-36 rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs outline-none focus:ring-2 focus:ring-zinc-900/10"
-        required
-      />
-      <button
-        type="submit"
-        className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50"
-      >
-        Reset
-      </button>
-    </form>
+    <div className="rounded-lg border border-zinc-200 bg-white p-4">
+      <div className="text-sm text-zinc-600">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-zinc-950">{value}</div>
+    </div>
   );
 }

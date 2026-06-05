@@ -1,6 +1,7 @@
-import { formatISO, startOfDay } from "date-fns";
+import { addDays, formatISO, startOfDay } from "date-fns";
 
-import { submitTodayAction } from "@/app/sales/submit/actions";
+import { SubmitDayPanel } from "@/app/sales/submit/SubmitDayPanel";
+import { EmptyState, PageHeader } from "@/components/ui";
 import { getSupabaseAdmin, requireUser } from "@/lib/db/server";
 
 function businessDateUtc(date = new Date()) {
@@ -9,43 +10,65 @@ function businessDateUtc(date = new Date()) {
 
 export default async function SubmitDayPage() {
   const { user, role } = await requireUser();
-  const d = businessDateUtc();
   const db = getSupabaseAdmin();
+  const d = businessDateUtc();
 
-  const { data: submission } = await db
-    .from("daily_submissions")
-    .select("submitted_at")
-    .eq("user_id", user.id)
-    .eq("business_date", d)
-    .maybeSingle();
+  if (role !== "salesperson") {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          title="Submit day"
+          description="Daily submission is only needed for salesperson accounts."
+        />
+        <EmptyState
+          title="Nothing to submit"
+          body="Admins can review sales from reports without submitting a sales day."
+        />
+      </div>
+    );
+  }
+
+  const start = startOfDay(new Date());
+  const end = addDays(start, 1);
+
+  const [{ data: submission }, { data: sales }] = await Promise.all([
+    db
+      .from("daily_submissions")
+      .select("submitted_at")
+      .eq("user_id", user.id)
+      .eq("business_date", d)
+      .maybeSingle(),
+    db
+      .from("sales")
+      .select("quantity_units,total_revenue")
+      .eq("user_id", user.id)
+      .gte("sold_at", formatISO(start))
+      .lt("sold_at", formatISO(end)),
+  ]);
+
+  const totals = (sales ?? []).reduce(
+    (acc, sale) => {
+      acc.revenue += Number(sale.total_revenue ?? 0);
+      acc.units += Number(sale.quantity_units ?? 0);
+      acc.count += 1;
+      return acc;
+    },
+    { revenue: 0, units: 0, count: 0 },
+  );
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-lg font-semibold">Submit Daily Sales</h1>
-      {role !== "salesperson" ? (
-        <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 text-sm">
-          Only salespersons submit daily sales.
-        </div>
-      ) : submission ? (
-        <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-zinc-200 text-sm">
-          Submitted at {new Date(submission.submitted_at).toLocaleString()}.
-          Sales for today are locked.
-        </div>
-      ) : (
-        <form action={submitTodayAction}>
-          <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-zinc-200">
-            <p className="text-sm text-zinc-700">
-              This locks today’s sales so they can’t be changed by you.
-            </p>
-            <button
-              type="submit"
-              className="mt-3 rounded-md bg-zinc-900 px-3 py-2 text-sm font-medium text-white hover:bg-zinc-800"
-            >
-              Submit Today
-            </button>
-          </div>
-        </form>
-      )}
+    <div className="space-y-5">
+      <PageHeader
+        title="Submit day"
+        description="When the day is finished, submit once to lock your sales."
+      />
+      <SubmitDayPanel
+        alreadySubmitted={Boolean(submission)}
+        submittedAt={submission?.submitted_at ?? null}
+        revenue={totals.revenue}
+        units={totals.units}
+        salesCount={totals.count}
+      />
     </div>
   );
 }

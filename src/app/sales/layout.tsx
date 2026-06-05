@@ -8,17 +8,19 @@ export default async function SalesLayout({ children }: { children: ReactNode })
 
   return (
     <AppShell
-      brand="Prestige Drinks — Sales"
-      subtitle={fullName}
+      brand="Prestige Drinks"
+      subtitle={fullName ? `Sales - ${fullName}` : "Sales workspace"}
       items={[
-        { href: "/sales", label: "Dashboard" },
-        { href: "/sales/products", label: "Available Goods" },
-        { href: "/sales/goods-in", label: "Goods In" },
-        { href: "/sales/sales/new", label: "Record a Sale" },
-        { href: "/sales/sales/today", label: "Daily Sales" },
-        { href: "/sales/reports", label: "Weekly Returns" },
-        { href: "/sales/submit", label: "Submit Day" },
-        ...(role === "admin" ? [{ href: "/admin", label: "Admin View" }] : []),
+        { href: "/sales", label: "Today", icon: "dashboard" },
+        { href: "/sales/sales/new", label: "Sell", icon: "sale" },
+        { href: "/sales/goods-in", label: "Goods In", icon: "goods" },
+        { href: "/sales/products", label: "Stock", icon: "products" },
+        { href: "/sales/submit", label: "Submit", icon: "submit" },
+        { href: "/sales/sales/today", label: "Sales List", icon: "today", primary: false },
+        { href: "/sales/reports", label: "Weekly Returns", icon: "reports", primary: false },
+        ...(role === "admin"
+          ? [{ href: "/admin", label: "Admin View", icon: "admin" as const, primary: false }]
+          : []),
       ]}
     >
       {children}

@@ -80,7 +80,7 @@ export function StartingStockFields({
           <>
             Total starting stock:{" "}
             <span className="font-medium text-zinc-900">{totalUnits}</span>{" "}
-            units ({packs} packs × {packSize} + {units} units)
+            units ({packs} packs x {packSize} + {units} units)
           </>
         ) : (
           <>Enter a pack size to calculate total starting stock.</>
@@ -89,4 +89,3 @@ export function StartingStockFields({
     </div>
   );
 }
-

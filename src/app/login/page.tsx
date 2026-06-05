@@ -18,8 +18,8 @@ async function LoginPageInner({
 }) {
   const sp = searchParams ? await searchParams : undefined;
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-zinc-50 to-white p-6">
-      <div className="w-full max-w-sm rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70 p-6">
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-6">
+      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900">
           Prestige Drinks
         </h1>
@@ -41,7 +41,7 @@ async function LoginPageInner({
               Email
             </label>
             <input
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10"
+              className="min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-base text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10 sm:text-sm"
               id="email"
               name="email"
               type="email"
@@ -61,11 +61,11 @@ async function LoginPageInner({
               name="password"
               autoComplete="current-password"
               required
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 pr-14 text-sm text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10"
+              className="min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-14 text-base text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10 sm:text-sm"
             />
           </div>
           <button
-            className="w-full rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
+            className="min-h-11 w-full rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
             type="submit"
           >
             Sign in

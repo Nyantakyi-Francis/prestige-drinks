@@ -85,7 +85,7 @@ export function StockFields({
           <>
             Total stock:{" "}
             <span className="font-medium text-zinc-900">{totalUnits}</span>{" "}
-            units ({packs} packs × {packSize} + {pieces} pieces)
+            units ({packs} packs x {packSize} + {pieces} pieces)
           </>
         ) : (
           <>Enter a pack size to calculate total stock.</>
@@ -94,4 +94,3 @@ export function StockFields({
     </div>
   );
 }
-

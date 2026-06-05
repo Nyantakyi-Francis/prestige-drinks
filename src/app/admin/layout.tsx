@@ -8,15 +8,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <AppShell
-      brand="Prestige Drinks — Admin"
-      subtitle={fullName}
+      brand="Prestige Drinks"
+      subtitle={fullName ? `Admin - ${fullName}` : "Admin workspace"}
       items={[
-        { href: "/admin", label: "Home" },
-        { href: "/admin/overview", label: "Overview" },
-        { href: "/admin/products", label: "Products" },
-        { href: "/admin/users", label: "Users" },
-        { href: "/admin/reports", label: "Reports" },
-        { href: "/sales", label: "Sales View" },
+        { href: "/admin", label: "Home", icon: "home" },
+        { href: "/admin/overview", label: "Overview", icon: "dashboard" },
+        { href: "/admin/products", label: "Products", icon: "products" },
+        { href: "/admin/users", label: "Users", icon: "users" },
+        { href: "/admin/reports", label: "Reports", icon: "reports" },
+        { href: "/sales", label: "Sales View", icon: "sales", primary: false },
       ]}
     >
       {children}

@@ -1,8 +1,14 @@
 import { formatISO, startOfDay, subDays } from "date-fns";
 import { connection } from "next/server";
 
+import {
+  EmptyState,
+  MetricTile,
+  PageHeader,
+  ProductStockSummary,
+  SectionCard,
+} from "@/components/ui";
 import { getSupabaseAdmin, requireUser } from "@/lib/db/server";
-import { splitStockUnits } from "@/lib/stock";
 
 export default async function WeeklyReturnsPage() {
   await connection();
@@ -23,8 +29,8 @@ export default async function WeeklyReturnsPage() {
   const { data: sales } = await query;
 
   const byProduct = new Map<string, { name: string; units: number; revenue: number }>();
-  for (const s of (sales ?? []) as unknown[]) {
-    const row = s as Record<string, unknown>;
+  for (const sale of (sales ?? []) as unknown[]) {
+    const row = sale as Record<string, unknown>;
     const key = String(row.product_id);
     const existing = byProduct.get(key) ?? {
       name: getProductName(row.product),
@@ -39,71 +45,92 @@ export default async function WeeklyReturnsPage() {
   const { data: products } = await db
     .from("products")
     .select("id,name,stock_units,pack_size")
+    .eq("is_active", true)
     .order("name");
 
+  const rows = (products ?? []).map((product) => ({
+    ...product,
+    sales: byProduct.get(product.id) ?? { name: product.name, units: 0, revenue: 0 },
+  }));
+  const totalRevenue = rows.reduce((sum, row) => sum + row.sales.revenue, 0);
+  const totalUnits = rows.reduce((sum, row) => sum + row.sales.units, 0);
+
   return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-lg font-semibold">Weekly Returns</h1>
-        <p className="text-sm text-zinc-600">
-          Rolling 7-day window ({start.toISOString().slice(0, 10)} to{" "}
-          {end.toISOString().slice(0, 10)}).
-        </p>
+    <div className="space-y-5">
+      <PageHeader
+        title="Weekly returns"
+        description={`Rolling 7-day view: ${start.toISOString().slice(0, 10)} to ${end.toISOString().slice(0, 10)}.`}
+      />
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <MetricTile label="Revenue" value={`GHS ${totalRevenue.toFixed(2)}`} helper="Last 7 days" />
+        <MetricTile label="Units sold" value={`${totalUnits}`} helper="Last 7 days" />
       </div>
 
-      <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-zinc-200">
-        <table className="min-w-max w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
-            <tr>
-              <th className="px-3 py-2">Product</th>
-              <th className="px-3 py-2">Sold (units)</th>
-              <th className="px-3 py-2">Revenue</th>
-              <th className="px-3 py-2">Stock Left</th>
-            </tr>
-          </thead>
-          <tbody className="whitespace-nowrap">
-            {(products ?? []).map((p) => {
-              const s = byProduct.get(p.id) ?? { name: p.name, units: 0, revenue: 0 };
-              const stock = splitStockUnits(
-                Number(p.stock_units ?? 0),
-                Number(p.pack_size ?? 0),
-              );
-              return (
-                <tr key={p.id}>
-                  <td className="px-3 py-2 font-medium">{p.name}</td>
-                  <td className="px-3 py-2">{s.units}</td>
-                  <td className="px-3 py-2">GHS {s.revenue.toFixed(2)}</td>
-                  <td className="px-3 py-2">
-                    {stock.packSize > 0 ? (
-                      <>
-                        {stock.packs} packs, {stock.units} units{" "}
-                        <span className="text-xs text-zinc-500">
-                          ({stock.totalUnits} units)
-                        </span>
-                      </>
-                    ) : (
-                      <>{stock.totalUnits} units</>
-                    )}
-                  </td>
+      {rows.length ? (
+        <>
+          <div className="grid gap-3 md:hidden">
+            {rows.map((row) => (
+              <SectionCard key={row.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold text-zinc-950">{row.name}</h2>
+                    <div className="mt-1 text-sm text-zinc-600">
+                      Stock left:{" "}
+                      <ProductStockSummary
+                        stockUnits={Number(row.stock_units ?? 0)}
+                        packSize={Number(row.pack_size ?? 0)}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-semibold text-zinc-950">
+                      GHS {row.sales.revenue.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-zinc-600">{row.sales.units} sold</div>
+                  </div>
+                </div>
+              </SectionCard>
+            ))}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 bg-white shadow-sm md:block">
+            <table className="min-w-max w-full text-sm">
+              <thead className="bg-zinc-50 text-left text-zinc-600">
+                <tr>
+                  <th className="px-4 py-3">Product</th>
+                  <th className="px-4 py-3">Sold</th>
+                  <th className="px-4 py-3">Revenue</th>
+                  <th className="px-4 py-3">Stock left</th>
                 </tr>
-              );
-            })}
-            {products?.length ? null : (
-              <tr>
-                <td className="px-3 py-4 text-zinc-600" colSpan={4}>
-                  No products yet.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.id} className="border-t border-zinc-100">
+                    <td className="px-4 py-3 font-semibold">{row.name}</td>
+                    <td className="px-4 py-3">{row.sales.units} units</td>
+                    <td className="px-4 py-3">GHS {row.sales.revenue.toFixed(2)}</td>
+                    <td className="px-4 py-3">
+                      <ProductStockSummary
+                        stockUnits={Number(row.stock_units ?? 0)}
+                        packSize={Number(row.pack_size ?? 0)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <EmptyState title="No products yet" body="Active products will appear here." />
+      )}
     </div>
   );
 }
 
 function getProductName(product: unknown) {
-  if (!product) return "Unknown";
-  if (Array.isArray(product)) return product[0]?.name ?? "Unknown";
-  return (product as Record<string, unknown>).name?.toString() ?? "Unknown";
+  if (!product) return "Unknown product";
+  if (Array.isArray(product)) return product[0]?.name ?? "Unknown product";
+  return (product as Record<string, unknown>).name?.toString() ?? "Unknown product";
 }

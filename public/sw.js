@@ -1,5 +1,3 @@
-/* eslint-disable no-restricted-globals */
-
 const CACHE_NAME = "prestige-drinks-pwa-v1";
 const PRECACHE_URLS = ["/offline.html"];
 

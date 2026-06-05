@@ -75,9 +75,9 @@ export default async function PrintReportPage({
         <Card label="Units Sold" value={`${totals.units}`} />
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-zinc-200">
         <table className="min-w-max w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
+          <thead className="bg-zinc-50 text-left text-sm text-zinc-600">
             <tr>
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Product</th>
@@ -87,24 +87,24 @@ export default async function PrintReportPage({
               <th className="px-3 py-2">Profit</th>
             </tr>
           </thead>
-          <tbody className="whitespace-nowrap">
+          <tbody>
             {(sales ?? []).map((sale) => {
               const s = sale as Record<string, unknown>;
               const soldAt = new Date(String(s.sold_at));
               const productName = getProductName(s.product);
               return (
-              <tr key={String(s.id)} className="border-t border-zinc-100">
-                <td className="px-3 py-2">
-                  {formatISO(soldAt, { representation: "date" })}
-                </td>
-                <td className="px-3 py-2 font-medium">{productName}</td>
-                <td className="px-3 py-2">
-                  {String(s.sale_type ?? "")} / {String(s.sale_unit_type ?? "")}
-                </td>
-                <td className="px-3 py-2">{Number(s.quantity_units ?? 0)}</td>
-                <td className="px-3 py-2">GHS {Number(s.total_revenue).toFixed(2)}</td>
-                <td className="px-3 py-2">GHS {Number(s.profit).toFixed(2)}</td>
-              </tr>
+                <tr key={String(s.id)} className="border-t border-zinc-100">
+                  <td className="px-3 py-2">
+                    {formatISO(soldAt, { representation: "date" })}
+                  </td>
+                  <td className="px-3 py-2 font-medium">{productName}</td>
+                  <td className="px-3 py-2">
+                    {String(s.sale_type ?? "")} / {String(s.sale_unit_type ?? "")}
+                  </td>
+                  <td className="px-3 py-2">{Number(s.quantity_units ?? 0)}</td>
+                  <td className="px-3 py-2">GHS {Number(s.total_revenue).toFixed(2)}</td>
+                  <td className="px-3 py-2">GHS {Number(s.profit).toFixed(2)}</td>
+                </tr>
               );
             })}
             {sales?.length ? null : (
@@ -118,8 +118,8 @@ export default async function PrintReportPage({
         </table>
       </div>
 
-      <div className="mt-6 text-xs text-zinc-500">
-        Tip: use your browser Print dialog to “Save as PDF”.
+      <div className="mt-6 text-sm text-zinc-500">
+        Tip: use your browser Print dialog to Save as PDF.
       </div>
     </div>
   );
@@ -127,8 +127,8 @@ export default async function PrintReportPage({
 
 function Card({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-3">
-      <div className="text-xs text-zinc-600">{label}</div>
+    <div className="rounded-lg border border-zinc-200 bg-white p-3">
+      <div className="text-sm text-zinc-600">{label}</div>
       <div className="mt-1 text-sm font-semibold">{value}</div>
     </div>
   );

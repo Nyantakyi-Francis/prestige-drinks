@@ -1,6 +1,17 @@
 import Link from "next/link";
+import { Download, FileText, Filter } from "lucide-react";
 import { formatISO, subDays } from "date-fns";
 
+import {
+  ActionLink,
+  EmptyState,
+  MetricTile,
+  PageHeader,
+  PrimaryButton,
+  SectionCard,
+  StatusBadge,
+  inputClassName,
+} from "@/components/ui";
 import { getSupabaseAdmin, requireRole } from "@/lib/db/server";
 import {
   buildQueryString,
@@ -68,216 +79,197 @@ export default async function AdminReportsPage({
     { revenue: 0, profit: 0, units: 0 },
   );
 
+  const queryParams = {
+    start: toIsoDate(start),
+    end: toIsoDate(end),
+    userId,
+    saleType,
+    productId,
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Reports</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Filter by date range, salesperson, sale type, and product.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs font-medium text-zinc-900 shadow-sm hover:bg-zinc-50"
-            href={`/admin/reports/export/csv${buildQueryString({
-              start: toIsoDate(start),
-              end: toIsoDate(end),
-              userId,
-              saleType,
-              productId,
-            })}`}
-          >
-            Export CSV
-          </Link>
-          <Link
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-zinc-800"
-            href={`/admin/reports/print${buildQueryString({
-              start: toIsoDate(start),
-              end: toIsoDate(end),
-              userId,
-              saleType,
-              productId,
-            })}`}
-            target="_blank"
-          >
-            Print / Save PDF
-          </Link>
-        </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Reports"
+        description="Start with totals. Use filters only when you need a narrower view."
+        actions={
+          <>
+            <ActionLink href={`/admin/reports/export/csv${buildQueryString(queryParams)}`} variant="secondary">
+              <Download className="h-4 w-4" aria-hidden />
+              CSV
+            </ActionLink>
+            <ActionLink
+              href={`/admin/reports/print${buildQueryString(queryParams)}`}
+              target="_blank"
+            >
+              <FileText className="h-4 w-4" aria-hidden />
+              Print
+            </ActionLink>
+          </>
+        }
+      />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <MetricTile label="Revenue" value={`GHS ${totals.revenue.toFixed(2)}`} helper="Selected range" />
+        <MetricTile label="Profit" value={`GHS ${totals.profit.toFixed(2)}`} helper="Selected range" />
+        <MetricTile label="Units sold" value={`${totals.units}`} helper="Selected range" />
       </div>
 
-      <form
-        method="get"
-        className="grid gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200/70 md:grid-cols-4"
-      >
-        <div className="md:col-span-4 text-sm font-semibold">Filters</div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="start">
-            Start date
-          </label>
-          <input
-            id="start"
-            name="start"
-            type="date"
-            defaultValue={toIsoDate(start)}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          />
+      <SectionCard>
+        <div className="flex items-center gap-2">
+          <Filter className="h-5 w-5 text-zinc-600" aria-hidden />
+          <h2 className="text-base font-semibold text-zinc-950">Filters</h2>
         </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="end">
-            End date
+        <form method="get" className="mt-4 grid gap-3 md:grid-cols-4">
+          <Field label="Start date" name="start" type="date" defaultValue={toIsoDate(start)} />
+          <Field label="End date" name="end" type="date" defaultValue={toIsoDate(end)} />
+          <label className="block">
+            <span className="text-sm font-semibold text-zinc-900">Salesperson</span>
+            <select id="userId" name="userId" defaultValue={userId ?? ""} className={inputClassName("mt-2")}>
+              <option value="">All</option>
+              {(people ?? [])
+                .filter((person) => {
+                  const p = person as Record<string, unknown>;
+                  return p.role === "salesperson" || p.role === "admin";
+                })
+                .map((person) => {
+                  const p = person as Record<string, unknown>;
+                  return (
+                    <option key={String(p.id)} value={String(p.id)}>
+                      {String(p.full_name ?? p.id)}
+                      {p.is_active === false ? " (disabled)" : ""}
+                    </option>
+                  );
+                })}
+            </select>
           </label>
-          <input
-            id="end"
-            name="end"
-            type="date"
-            defaultValue={toIsoDate(end)}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="userId">
-            Salesperson
+          <label className="block">
+            <span className="text-sm font-semibold text-zinc-900">Sale type</span>
+            <select id="saleType" name="saleType" defaultValue={saleType ?? ""} className={inputClassName("mt-2")}>
+              <option value="">All</option>
+              <option value="wholesale">Wholesale</option>
+              <option value="retail">Retail</option>
+              <option value="store">Store</option>
+            </select>
           </label>
-          <select
-            id="userId"
-            name="userId"
-            defaultValue={userId ?? ""}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            <option value="">All</option>
-            {(people ?? [])
-              .filter((person) => {
-                const p = person as Record<string, unknown>;
-                return p.role === "salesperson" || p.role === "admin";
-              })
-              .map((person) => {
-                const p = person as Record<string, unknown>;
+          <label className="block md:col-span-2">
+            <span className="text-sm font-semibold text-zinc-900">Product</span>
+            <select id="productId" name="productId" defaultValue={productId ?? ""} className={inputClassName("mt-2")}>
+              <option value="">All</option>
+              {(products ?? []).map((product) => {
+                const p = product as Record<string, unknown>;
                 return (
                   <option key={String(p.id)} value={String(p.id)}>
-                    {String(p.full_name ?? p.id)}{" "}
-                    {p.is_active === false ? "(disabled)" : ""}
+                    {String(p.name ?? "")}
                   </option>
                 );
               })}
-          </select>
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="saleType">
-            Sale type
+            </select>
           </label>
-          <select
-            id="saleType"
-            name="saleType"
-            defaultValue={saleType ?? ""}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            <option value="">All</option>
-            <option value="wholesale">Wholesale</option>
-            <option value="retail">Retail</option>
-            <option value="store">Store</option>
-          </select>
-        </div>
-        <div className="space-y-1 md:col-span-2">
-          <label className="text-xs font-medium text-zinc-700" htmlFor="productId">
-            Product
-          </label>
-          <select
-            id="productId"
-            name="productId"
-            defaultValue={productId ?? ""}
-            className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-zinc-900/10"
-          >
-            <option value="">All</option>
-            {(products ?? []).map((product) => {
-              const p = product as Record<string, unknown>;
-              return (
-                <option key={String(p.id)} value={String(p.id)}>
-                  {String(p.name ?? "")}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div className="flex items-end gap-2 md:col-span-2">
-          <button
-            type="submit"
-            className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-zinc-800"
-          >
-            Apply
-          </button>
-          <Link
-            href="/admin/reports"
-            className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-900 shadow-sm hover:bg-zinc-50"
-          >
-            Reset
-          </Link>
-        </div>
-      </form>
+          <div className="flex items-end gap-2 md:col-span-2">
+            <PrimaryButton type="submit">Apply filters</PrimaryButton>
+            <Link
+              href="/admin/reports"
+              className="inline-flex min-h-11 items-center justify-center rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50"
+            >
+              Reset
+            </Link>
+          </div>
+        </form>
+      </SectionCard>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card label="Revenue" value={`GHS ${totals.revenue.toFixed(2)}`} />
-        <Card label="Profit" value={`GHS ${totals.profit.toFixed(2)}`} />
-        <Card label="Units Sold" value={`${totals.units}`} />
-      </div>
-
-      <div className="overflow-x-auto rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200/70">
-        <div className="border-b border-zinc-200/70 px-4 py-3">
-          <div className="text-sm font-semibold">Recent Sales</div>
-          <div className="mt-1 text-xs text-zinc-500">Showing up to 200 records.</div>
+      <SectionCard>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-base font-semibold text-zinc-950">Sales found</h2>
+          <StatusBadge tone={(sales ?? []).length ? "info" : "neutral"}>
+            {(sales ?? []).length} records
+          </StatusBadge>
         </div>
-        <table className="min-w-max w-full text-sm">
-          <thead className="bg-zinc-50 text-left text-xs text-zinc-600 whitespace-nowrap">
-            <tr>
-              <th className="px-4 py-2">Date</th>
-              <th className="px-4 py-2">Product</th>
-              <th className="px-4 py-2">Type</th>
-              <th className="px-4 py-2">Qty</th>
-              <th className="px-4 py-2">Revenue</th>
-              <th className="px-4 py-2">Profit</th>
-            </tr>
-          </thead>
-          <tbody className="whitespace-nowrap">
-            {(sales ?? []).map((sale) => {
-              const s = sale as Record<string, unknown>;
-              const soldAt = new Date(String(s.sold_at));
-              const product = s.product as unknown;
-              const productName = getProductName(product);
-              return (
-              <tr key={String(s.id)} className="border-t border-zinc-100">
-                <td className="px-4 py-2">
-                  {formatISO(soldAt, { representation: "date" })}
-                </td>
-                <td className="px-4 py-2 font-medium">{productName}</td>
-                <td className="px-4 py-2">
-                  {String(s.sale_type ?? "")} / {String(s.sale_unit_type ?? "")}
-                </td>
-                <td className="px-4 py-2">{Number(s.quantity_units ?? 0)}</td>
-                <td className="px-4 py-2">GHS {Number(s.total_revenue).toFixed(2)}</td>
-                <td className="px-4 py-2">GHS {Number(s.profit).toFixed(2)}</td>
-              </tr>
-              );
-            })}
-            {sales?.length ? null : (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-zinc-600">
-                  No sales found for these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+
+        {(sales ?? []).length ? (
+          <>
+            <div className="mt-3 grid gap-3 lg:hidden">
+              {(sales ?? []).map((sale) => {
+                const s = sale as Record<string, unknown>;
+                const soldAt = new Date(String(s.sold_at));
+                return (
+                  <div key={String(s.id)} className="rounded-md border border-zinc-200 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-zinc-950">
+                          {getProductName(s.product)}
+                        </div>
+                        <div className="mt-1 text-sm text-zinc-600">
+                          {formatISO(soldAt, { representation: "date" })} - {String(s.sale_type)} / {String(s.sale_unit_type)}
+                        </div>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <div className="font-semibold">GHS {Number(s.total_revenue).toFixed(2)}</div>
+                        <div className="text-sm text-zinc-600">Profit GHS {Number(s.profit).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 hidden overflow-x-auto lg:block">
+              <table className="min-w-max w-full text-sm">
+                <thead className="bg-zinc-50 text-left text-zinc-600">
+                  <tr>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3">Product</th>
+                    <th className="px-4 py-3">Type</th>
+                    <th className="px-4 py-3">Qty</th>
+                    <th className="px-4 py-3">Revenue</th>
+                    <th className="px-4 py-3">Profit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(sales ?? []).map((sale) => {
+                    const s = sale as Record<string, unknown>;
+                    const soldAt = new Date(String(s.sold_at));
+                    return (
+                      <tr key={String(s.id)} className="border-t border-zinc-100">
+                        <td className="px-4 py-3">{formatISO(soldAt, { representation: "date" })}</td>
+                        <td className="px-4 py-3 font-semibold">{getProductName(s.product)}</td>
+                        <td className="px-4 py-3">{String(s.sale_type)} / {String(s.sale_unit_type)}</td>
+                        <td className="px-4 py-3">{Number(s.quantity_units ?? 0)}</td>
+                        <td className="px-4 py-3">GHS {Number(s.total_revenue).toFixed(2)}</td>
+                        <td className="px-4 py-3">GHS {Number(s.profit).toFixed(2)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <EmptyState title="No sales found" body="Change the filters or reset to see more records." />
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }
 
-function Card({ label, value }: { label: string; value: string }) {
+function Field({
+  label,
+  name,
+  type,
+  defaultValue,
+}: {
+  label: string;
+  name: string;
+  type: string;
+  defaultValue: string;
+}) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-zinc-200/70">
-      <div className="text-xs text-zinc-600">{label}</div>
-      <div className="mt-1 text-sm font-semibold">{value}</div>
-    </div>
+    <label className="block">
+      <span className="text-sm font-semibold text-zinc-900">{label}</span>
+      <input id={name} name={name} type={type} defaultValue={defaultValue} className={inputClassName("mt-2")} />
+    </label>
   );
 }
 
