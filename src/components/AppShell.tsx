@@ -76,7 +76,9 @@ export function AppShell({
   const [open, setOpen] = useState(false);
 
   const activeHref = useMemo(() => {
-    const match = items.find((i) => pathname === i.href || pathname.startsWith(i.href + "/"));
+    const match = items
+      .filter((item) => pathname === item.href || pathname.startsWith(item.href + "/"))
+      .sort((a, b) => b.href.length - a.href.length)[0];
     return match?.href ?? null;
   }, [items, pathname]);
 

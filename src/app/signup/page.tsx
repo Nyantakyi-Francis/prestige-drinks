@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { signupSalespersonAction } from "@/app/signup/actions";
+import { AuthSubmitButton } from "@/components/AuthSubmitButton";
 import { PasswordField } from "@/components/PasswordField";
 
 export default function SignupPage({
@@ -71,12 +72,10 @@ async function SignupPageInner({
             />
             <div className="text-xs text-zinc-500">Minimum 6 characters.</div>
           </div>
-          <button
-            className="min-h-11 w-full rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-            type="submit"
-          >
-            Create account
-          </button>
+          <AuthSubmitButton
+            label="Create account"
+            pendingLabel="Creating account..."
+          />
         </form>
 
         <div className="mt-4 text-sm text-zinc-600">

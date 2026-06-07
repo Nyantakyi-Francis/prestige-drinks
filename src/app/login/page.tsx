@@ -1,4 +1,5 @@
 import { loginAction } from "@/app/login/actions";
+import { AuthSubmitButton } from "@/components/AuthSubmitButton";
 import { PasswordField } from "@/components/PasswordField";
 
 export default function LoginPage({
@@ -64,12 +65,7 @@ async function LoginPageInner({
               className="min-h-11 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 pr-14 text-base text-zinc-900 placeholder:text-zinc-400 outline-none focus:ring-2 focus:ring-zinc-900/10 sm:text-sm"
             />
           </div>
-          <button
-            className="min-h-11 w-full rounded-md bg-zinc-950 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-zinc-800"
-            type="submit"
-          >
-            Sign in
-          </button>
+          <AuthSubmitButton label="Sign in" pendingLabel="Signing in..." />
         </form>
 
         <div className="mt-4 text-sm text-zinc-600">
